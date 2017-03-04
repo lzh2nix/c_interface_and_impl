@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <limits.h>
 
 #include "atom.h"
@@ -57,7 +58,7 @@ struct atom
   struct atom *link;
   int len;
   char *str;
-} *buckets[2048];
+} *buckets[2039];
 
 const char *Atom_string(const char *str) {
   assert(str);
@@ -98,16 +99,16 @@ const char *Atom_new(const char *str, int len) {
   for (h = 0, i = 0; i < len; i++) {
     h = (h << 1) + scatter[(unsigned char)str[i]];
   }
-  h &= NELEMS(buckets) -1;
+  h &= 0x7fffffff;
+  h %= NELEMS(buckets);
 
-  for (p = buckets[h]; p; p = p->link) {
+  for (p = buckets[h]; p; p = p->link)
     if (len == p->len) {
       for (i = 0; i < len && p->str[i] == str[i];)
 	i++;
       if (i == len)
 	return p->str;
     }
-
     p = (struct atom *)malloc(sizeof (struct atom) + len + 1);
     p->len = len;
     p->str = (char *)(p + 1);
@@ -116,7 +117,6 @@ const char *Atom_new(const char *str, int len) {
     p->str[len] = '\0';
     p->link = buckets[h];
     buckets[h] = p;
-  }
 }
 
 int Atom_length(const char * str) {
@@ -132,4 +132,16 @@ int Atom_length(const char * str) {
 
   assert(0);
   return 0;
+}
+
+void  Atom_getdist(int *dist, int count) {
+  int i;
+  struct atom *p;
+  for (i = 0; i < NELEMS(buckets); i++) {
+    int count = 0;
+    for (p = buckets[i]; p; p = p-> link)
+      count++;
+    dist[i] = count;
+  }
+  
 }
