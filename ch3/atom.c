@@ -7,7 +7,9 @@
 #include "atom.h"
 
 #define NELEMS(x) ((sizeof x) / (sizeof x[0]))
-		   
+#define TRUE 1
+#define FALSE 0
+
 static unsigned long scatter[] = {
   2078917053, 143302914, 1027100827, 1953210302, 755253631, 2002600785,
   1405390230, 45248011, 1099951567, 433832350, 2018585307, 438263339,
@@ -60,6 +62,9 @@ struct atom
   char *str;
 } *buckets[2039];
 
+unsigned long Atom_gethash(const char*, int);
+int Atom_str_cmp(const char *str1, const char *str2);
+
 const char *Atom_string(const char *str) {
   assert(str);
   return Atom_new(str, strlen(str));
@@ -96,20 +101,12 @@ const char *Atom_new(const char *str, int len) {
   assert(str);
   assert(len >= 0);
 
-  for (h = 0, i = 0; i < len; i++) {
-    h = (h << 1) + scatter[(unsigned char)str[i]];
-  }
-  h &= 0x7fffffff;
-  h %= NELEMS(buckets);
-
+  h = Atom_gethash(str, len);
   for (p = buckets[h]; p; p = p->link)
-    if (len == p->len) {
-      for (i = 0; i < len && p->str[i] == str[i];)
-	i++;
-      if (i == len)
-	return p->str;
+    if (Atom_str_cmp(str, p->str) == TRUE) {
+      return p->str;
     }
-    p = (struct atom *)malloc(sizeof (struct atom) + len + 1);
+  p = (struct atom *)malloc(sizeof (struct atom) + len + 1);
     p->len = len;
     p->str = (char *)(p + 1);
     if (len > 0)
@@ -144,4 +141,76 @@ void  Atom_getdist(int *dist, int count) {
     dist[i] = count;
   }
   
+}
+
+void Atom_free(const char *str) {
+
+  assert(str);
+  struct atom *p;
+  struct atom *prev = NULL;
+  int i;
+  int len = strlen(str);
+  unsigned long h = Atom_gethash(str, len);
+  for (p = buckets[h]; p; prev = p, p = p->link) {
+    if (Atom_str_cmp(str, p->str) == TRUE) {
+      if (prev == NULL) {
+	buckets[h] = p->link;
+	free(p);
+      } else {
+	prev->link = p->link;
+	free(p);
+      }
+      break;
+    }
+  }
+}
+
+int Atom_str_cmp(const char *str1, const char *str2) {
+  size_t len1 = strlen(str1);
+  size_t len2 = strlen(str2);
+  if (len1 == len2) {
+    int i;
+    for (i = 0; i < len1 && str1[i] == str2[i];)
+      i++;
+    if (i == len1)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+unsigned long Atom_gethash(const char *str, int len) {
+
+  unsigned long h;
+  int i;
+  for (h = 0, i = 0; i < len; i++) {
+    h = (h << 1) + scatter[(unsigned char)str[i]];
+  }
+  h &= 0x7fffffff;
+  h %= NELEMS(buckets);
+  return h;
+}
+
+void Atom_print() {
+  int i;
+  struct atom *p;
+  for (i = 0; i < NELEMS(buckets); i++) {
+    printf("\n%d---->\n", i);
+    for (p = buckets[i]; p; p = p-> link)
+      printf("%s--->\n", p->str);
+  }  
+}
+
+void Atom_reset() {
+  struct atom *p;
+  struct atom *temp;
+  int i;
+  for (i = 0; i < NELEMS(buckets); i++) {
+    for (p = buckets[i]; p;) {
+      temp = p->link;
+      free(p);
+      p = temp;
+    }
+    buckets[i] = NULL;
+  }
 }

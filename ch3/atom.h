@@ -5,5 +5,8 @@ extern       int   Atom_length(const char *str);
 extern const char *Atom_new(const char *str, int len);
 extern const char *Atom_string(const char *str);
 extern const char *Atom_int(long n);
-extern       void  Atom_getdist(int *, int count);
+extern       void  Atom_getdist(int *array, int count);
+extern       void  Atom_print();
+extern       void  Atom_free(const char *str);
+extern       void  Atom_reset();
 #endif
