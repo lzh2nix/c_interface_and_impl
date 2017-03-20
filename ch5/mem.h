@@ -7,7 +7,7 @@
 #define NEWO(p) ((p = CALLOC(1, (long) sizeof *(p))))
 #define FREE(ptr) ((void)(Mem_free((ptr), __FILE__, __LINE__), (ptr) = 0))
 
-extern void Mem_alloc(long nbytes, const char *file, int line);
-extern void Mem_calloc(long count, long nbytes, const char *file, int line);
+extern void *Mem_alloc(long nbytes, const char *file, int line);
+extern void *Mem_calloc(long count, long nbytes, const char *file, int line);
 extern void Mem_free(void *ptr, const char *file, int line);
 #endif
