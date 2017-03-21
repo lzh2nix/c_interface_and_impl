@@ -1,6 +1,5 @@
 #ifndef ARENA_INCLUDED
 #define ARENA_INCLUDED
-#include <except.h>
 
 #define T Arena_T
 typedef struct T *T;
@@ -14,7 +13,7 @@ extern void *Arena_alloc(T arena, long nbytes,
 extern void *Arena_calloc(T arena, long count,
 			  long nbytes, const char *file, int line);
 
-extern Arena_free(T arena);
-
+extern void Arena_free(T arena);
+extern void Arena_print(T arena);
 #undef T
 #endif
